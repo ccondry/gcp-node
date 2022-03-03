@@ -1,0 +1,17 @@
+{
+  "name": "gcp-node",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Coty Condry <ccondry@cisco.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "node test"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^8.5.1",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.0"
+  }
+}

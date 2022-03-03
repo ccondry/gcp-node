@@ -140,6 +140,82 @@ function setIamPolicy (projectId, token, policy) {
   })
 }
 
+// effectively adds a role to a user.
+// returns true if added, false if already in the policy.
+async function addRoleToPrincipal ({
+  projectId,
+  token,
+  roleName,
+  principal
+}) {
+  try {
+    // build role ID string
+    const role = `projects/${projectId}/roles/${roleName}`
+    // get the current policy
+    const policy = await getIamPolicy(projectId, token)
+    // find the bindings for our role
+    let binding = policy.bindings.find(v => v.role === role)
+    // if binding didn't exist, add it to policy
+    if (!binding) {
+      binding = {
+        role,
+        members: []
+      }
+      policy.bindings.push(binding)
+    }
+    // find user in binding
+    const isMember = binding.members.find(v => v === principal)
+    if (!isMember) {
+      // add principal
+      binding.members.push(principal)
+      // update google and return result, which is the modified policy
+      return setIamPolicy(projectId, token, policy)
+    } else {
+      // do nothing - return unmodified policy
+      return policy
+    }
+  } catch (e) {
+    throw e
+  }
+}
+
+// effectively adds a role to a user.
+// returns true if added, false if already in the policy.
+async function removeRoleFromPrincipal ({
+  projectId,
+  token,
+  roleName,
+  principal
+}) {
+  try {
+    // build role ID string
+    const role = `projects/${projectId}/roles/${roleName}`
+    // get the current policy
+    const policy = await getIamPolicy(projectId, token)
+    // find the bindings for our role
+    let binding = policy.bindings.find(v => v.role === role)
+    // if binding didn't exist
+    if (!binding) {
+      // do nothing - return unmodified policy
+      return policy
+    }
+    // find user in binding
+    const index = binding.members.findIndex(v => v === principal)
+    // if user not a member of binding, nothing to do
+    if (index < 0) {
+      // user does not have role - return unmodified policy
+      return policy
+    } else {
+      // remove principal from the role members
+      binding.members.splice(index, 1)
+      // update google and return result, which is the modified policy
+      return setIamPolicy(projectId, token, policy)
+    }
+  } catch (e) {
+    throw e
+  }
+}
+
 // get list of google APIs from discovery API
 // url = 'https://www.googleapis.com/discovery/v1/apis'
 
@@ -151,5 +227,7 @@ module.exports = {
   getAccessToken,
   listProjectPrincipals,
   getIamPolicy,
-  setIamPolicy
+  setIamPolicy,
+  addRoleToPrincipal,
+  removeRoleFromPrincipal
 }
